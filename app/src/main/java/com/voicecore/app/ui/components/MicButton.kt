@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier.modifier
+import androidx.compose.ui.Modifier.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
@@ -34,43 +34,20 @@ fun MicButton(
     modifier: Modifier = Modifier
 ) {
     val isActive = state == AssistantState.LISTENING || state == AssistantState.SPEAKING
-    val scale by animateFloatAsState(
-        targetValue = if (isActive) 1.08f else 1f,
-        animationSpec = tween(200),
-        label = "micScale"
+    val scale by animateFloatAsState(if (isActive) 1.08f else 1f, tween(200), label = "s")
+    val gradient = Brush.linearGradient(
+        if (state == AssistantState.LISTENING) listOf(NeonCyan, NeonPurple)
+        else listOf(NeonPurple, NeonPurple.copy(alpha = 0.7f))
     )
-
-    val gradient = if (state == AssistantState.LISTENING) {
-        Brush.linearGradient(listOf(NeonCyan, NeonPurple))
-    } else {
-        Brush.linearGradient(listOf(NeonPurple, NeonPurple.copy(alpha = 0.7f)))
-    }
-
     Box(
-        modifier = modifier
-            .size(80.dp)
-            .scale(scale)
-            .clip(CircleShape)
-            .background(gradient)
-            .border(
-                width = 2.dp,
-                brush = Brush.linearGradient(
-                    listOf(TextPrimary.copy(alpha = 0.3f), TextPrimary.copy(alpha = 0.05f))
-                ),
-                shape = CircleShape
-            )
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            ),
+        modifier = modifier.size(80.dp).scale(scale).clip(CircleShape).background(gradient)
+            .border(2.dp, Brush.linearGradient(listOf(TextPrimary.copy(alpha = 0.3f), TextPrimary.copy(alpha = 0.05f))), CircleShape)
+            .clickable(remember { MutableInteractionSource() }, null, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = if (state == AssistantState.LISTENING) Icons.Default.Stop else Icons.Default.Mic,
-            contentDescription = if (state == AssistantState.LISTENING) "Stop" else "Microphone",
-            tint = TextPrimary,
-            modifier = Modifier.size(32.dp)
+            if (state == AssistantState.LISTENING) Icons.Default.Stop else Icons.Default.Mic,
+            null, tint = TextPrimary, modifier = Modifier.size(32.dp)
         )
     }
 }
