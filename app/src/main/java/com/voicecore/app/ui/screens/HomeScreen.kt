@@ -1,7 +1,16 @@
 package com.voicecore.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Chat
@@ -14,7 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,7 +33,13 @@ import com.voicecore.app.ui.AssistantState
 import com.voicecore.app.ui.MainViewModel
 import com.voicecore.app.ui.components.MicButton
 import com.voicecore.app.ui.components.VoiceWave
-import com.voicecore.app.ui.theme.*
+import com.voicecore.app.ui.theme.BlackDeep
+import com.voicecore.app.ui.theme.GraphiteLight
+import com.voicecore.app.ui.theme.NeonCyan
+import com.voicecore.app.ui.theme.NeonPurple
+import com.voicecore.app.ui.theme.TextMuted
+import com.voicecore.app.ui.theme.TextPrimary
+import com.voicecore.app.ui.theme.TextSecondary
 
 @Composable
 fun HomeScreen(
@@ -39,60 +54,131 @@ fun HomeScreen(
     val apiConfigured by viewModel.isApiConfigured.collectAsState()
 
     val statusText = when (state) {
-        AssistantState.IDLE -> if (apiConfigured) "Ready" else "API not configured"
-        AssistantState.LISTENING -> "Listening..."
-        AssistantState.PROCESSING -> "Thinking..."
-        AssistantState.SPEAKING -> "Speaking..."
-        AssistantState.ERROR -> "Error"
+        AssistantState.IDLE -> if (apiConfigured) "Готов к разговору" else "Настрой API в Settings"
+        AssistantState.LISTENING -> "Слушаю..."
+        AssistantState.PROCESSING -> "Думаю..."
+        AssistantState.SPEAKING -> "Отвечаю..."
+        AssistantState.ERROR -> "Ошибка"
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(BlackDeep)) {
+    val statusColor = when (state) {
+        AssistantState.LISTENING -> NeonCyan
+        AssistantState.PROCESSING -> NeonPurple
+        AssistantState.SPEAKING -> NeonCyan
+        AssistantState.ERROR -> NeonPurple
+        else -> if (apiConfigured) TextPrimary else TextMuted
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BlackDeep)
+            .statusBarsPadding()
+    ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("VOICECORE", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Column {
+                Text(
+                    text = "VOICECORE",
+                    color = TextPrimary,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 3.sp
+                )
+                Text(
+                    text = "AI Voice Assistant",
+                    color = TextMuted,
+                    fontSize = 12.sp
+                )
+            }
             Row {
-                IconButton(onClick = onOpenHistory) { Icon(Icons.Outlined.History, null, tint = TextSecondary) }
-                IconButton(onClick = onOpenChat) { Icon(Icons.Outlined.Chat, null, tint = TextSecondary) }
-                IconButton(onClick = onOpenSettings) { Icon(Icons.Outlined.Settings, null, tint = TextSecondary) }
+                IconButton(onClick = onOpenHistory) {
+                    Icon(Icons.Outlined.History, contentDescription = "История", tint = TextSecondary)
+                }
+                IconButton(onClick = onOpenChat) {
+                    Icon(Icons.Outlined.Chat, contentDescription = "Чат", tint = TextSecondary)
+                }
+                IconButton(onClick = onOpenSettings) {
+                    Icon(Icons.Outlined.Settings, contentDescription = "Настройки", tint = TextSecondary)
+                }
             }
         }
+
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            VoiceWave(state = state, size = 240.dp)
-            Spacer(Modifier.height(32.dp))
-            Text(statusText, color = if (state == AssistantState.IDLE && !apiConfigured) TextMuted else TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            if (partial.isNotBlank()) {
-                Spacer(Modifier.height(12.dp))
-                Text(partial, color = TextSecondary, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
-            }
-            if (error != null) {
-                Spacer(Modifier.height(12.dp))
-                Box(Modifier.clip(RoundedCornerShape(12.dp)).background(GraphiteLight).padding(horizontal = 16.dp, vertical = 10.dp)) {
-                    Text(error ?: "", color = NeonPurple, fontSize = 13.sp, textAlign = TextAlign.Center)
-                }
-            }
-            Spacer(Modifier.height(48.dp))
-            MicButton(state = state, onClick = {
-                when (state) {
-                    AssistantState.LISTENING -> viewModel.stopListening()
-                    AssistantState.SPEAKING -> viewModel.stopSpeaking()
-                    else -> viewModel.startListening()
-                }
-            })
-            Spacer(Modifier.height(16.dp))
+            VoiceWave(state = state, size = 260.dp)
+
+            Spacer(modifier = Modifier.height(28.dp))
+
             Text(
-                when (state) {
-                    AssistantState.LISTENING -> "Tap to stop"
-                    AssistantState.SPEAKING -> "Tap to stop speaking"
-                    else -> "Tap to speak"
+                text = statusText,
+                color = statusColor,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            if (partial.isNotBlank()) {
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = partial,
+                    color = TextSecondary,
+                    fontSize = 15.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+            }
+
+            if (error != null) {
+                Spacer(modifier = Modifier.height(14.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(GraphiteLight)
+                        .padding(horizontal = 18.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = error ?: "",
+                        color = NeonPurple,
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(44.dp))
+
+            MicButton(
+                state = state,
+                onClick = {
+                    when (state) {
+                        AssistantState.LISTENING -> viewModel.stopListening()
+                        AssistantState.SPEAKING -> viewModel.stopSpeaking()
+                        else -> viewModel.startListening()
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Text(
+                text = when (state) {
+                    AssistantState.LISTENING -> "Нажми чтобы остановить"
+                    AssistantState.SPEAKING -> "Нажми чтобы прервать"
+                    AssistantState.PROCESSING -> "Подожди..."
+                    else -> "Нажми и говори"
                 },
-                color = TextMuted, fontSize = 13.sp
+                color = TextMuted,
+                fontSize = 13.sp
             )
         }
     }
